@@ -1,0 +1,93 @@
+use std::collections::HashMap;
+
+// Define a trait for basic account operations
+trait AccountOperations {
+    fn deposit(&mut self, amount: f64);
+    fn withdraw(&mut self, amount: f64) -> Result<(), String>;
+    fn check_balance(&self) -> f64;
+}
+
+// Define a struct for a bank account
+struct Account {
+    name: String,
+    balance: f64,
+}
+
+impl AccountOperations for Account {
+    fn deposit(&mut self, amount: f64) {
+        self.balance += amount;
+        println!("Deposited ${:.2} into account '{}'. New balance: ${:.2}", amount, self.name, self.balance);
+    }
+
+    fn withdraw(&mut self, amount: f64) -> Result<(), String> {
+        if self.balance >= amount {
+            self.balance -= amount;
+            println!("Withdrew ${:.2} from account '{}'. New balance: ${:.2}", amount, self.name, self.balance);
+            Ok(())
+        } else {
+            Err(format!("Insufficient funds in account '{}'. Available balance: ${:.2}", self.name, self.balance))
+        }
+    }
+
+    fn check_balance(&self) -> f64 {
+        self.balance
+    }
+}
+
+// Define a bank struct to manage multiple accounts
+struct Bank {
+    accounts: HashMap<String, Account>,
+}
+
+impl Bank {
+    fn new() -> Self {
+        Self {
+            accounts: HashMap::new(),
+        }
+    }
+
+    fn create_account(&mut self, name: String, initial_deposit: f64) {
+        if self.accounts.contains_key(&name) {
+            println!("Account with name '{}' already exists.", name);
+        } else {
+            let account = Account {
+                name: name.clone(),
+                balance: initial_deposit,
+            };
+            self.accounts.insert(name.clone(), account);
+            println!("Account '{}' created with initial deposit: ${:.2}", name, initial_deposit);
+        }
+    }
+
+    fn get_account(&mut self, name: &str) -> Option<&mut Account> {
+        self.accounts.get_mut(name)
+    }
+}
+
+fn main() {
+    let mut bank = Bank::new();
+
+    // Create accounts
+    bank.create_account("Alice".to_string(), 1000.0);
+    bank.create_account("Bob".to_string(), 500.0);
+
+    // Perform operations on Alice's account
+    if let Some(account) = bank.get_account("Alice") {
+        account.deposit(200.0);
+        match account.withdraw(150.0) {
+            Ok(_) => println!("Withdrawal successful."),
+            Err(e) => println!("{}", e),
+        }
+        println!("Alice's current balance: ${:.2}", account.check_balance());
+    }
+
+    // Perform operations on Bob's account
+    if let Some(account) = bank.get_account("Bob") {
+        account.deposit(300.0);
+        match account.withdraw(1000.0) {
+            Ok(_) => println!("Withdrawal successful."),
+            Err(e) => println!("{}", e),
+        }
+        println!("Bob's current balance: ${:.2}", account.check_balance());
+    }
+}
